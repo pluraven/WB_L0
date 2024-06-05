@@ -10,17 +10,15 @@ function cleanup {
 
 trap cleanup EXIT
 
-NATS_STREAMING_SERVER_PATH=nats-streaming-server
-
-GO_PROGRAM_PATH="$(dirname "$0")"
+GO_PROGRAM_PATH="$HOME/Documents/WBTech/L0"
 
 echo "Launching nats-streaming-server..."
-exec "$NATS_STREAMING_SERVER_PATH" &
+exec nats-streaming-server &
 
 sleep 1
 
 echo "Launching service..."
-go build -o main "$GO_PROGRAM_PATH/cmd"
-if [ -e "$GO_PROGRAM_PATH/main" ]; then
-    "$GO_PROGRAM_PATH/main"
+if [ ! -e "$GO_PROGRAM_PATH/main" ]; then
+    go build -o "$GO_PROGRAM_PATH/main" "$GO_PROGRAM_PATH/cmd"
 fi
+"$GO_PROGRAM_PATH/main"

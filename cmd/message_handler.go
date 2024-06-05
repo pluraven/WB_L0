@@ -1,9 +1,8 @@
 package main
 
 import (
+	"L0/internal/storage"
 	"encoding/json"
-	"fmt"
-	"github.com/nats-io/stan.go"
 	"log"
 	"time"
 )
@@ -17,6 +16,7 @@ type Delivery struct {
 	Region  string `json:"region"`
 	Email   string `json:"email"`
 }
+
 type Payment struct {
 	Transaction  string `json:"transaction"`
 	RequestID    string `json:"request_id"`
@@ -29,6 +29,7 @@ type Payment struct {
 	GoodsTotal   int    `json:"goods_total"`
 	CustomFee    int    `json:"custom_fee"`
 }
+
 type Item struct {
 	ChrtID      int    `json:"chrt_id"`
 	TrackNumber string `json:"track_number"`
@@ -43,7 +44,7 @@ type Item struct {
 	Status      int    `json:"status"`
 }
 
-type correctMessage struct {
+type CorrectMessage struct {
 	OrderUID string `json:"order_uid"`
 	TrackNum string `json:"track_num"`
 	Entry    string `json:"entry"`
@@ -57,17 +58,22 @@ type correctMessage struct {
 	Shardkey          string    `json:"shardkey"`
 	SmID              int       `json:"sm_id"`
 	DateCreated       time.Time `json:"date_created"`
-	OOFShard          string    `json:"oof_shard"`
+	OOFShard          int       `json:"oof_shard"`
 }
 
-var MessageHandler stan.MsgHandler = func(msg *stan.Msg) {
-	var message correctMessage
-	err := json.Unmarshal(msg.Data, &message)
+func MessageHandler(message []byte, strg *storage.Storage) {
+	log.Printf("Recived message\n")
+	var correctMessage CorrectMessage
+	err := json.Unmarshal(message, &correctMessage)
 	if err != nil {
-		log.Printf("Error validating message:\n%v\n", err)
+		log.Printf("Invalid message: %v\n", err)
 	} else {
-		//todo: write to db (with current date)
-		//todo: write to cache
-		fmt.Println(message.Items[0].Brand)
+		log.Printf("Message is valid\nWriting message to storage...\n")
+		orderToSave := &storage.JsonData{ID: correctMessage.OrderUID, Data: string(message), DataString: string(message)}
+		err = strg.WriteToDB(orderToSave)
+		if err != nil {
+			log.Printf("Error writting message to DB: %v\n", err)
+		}
+		strg.PutInCache(orderToSave.ID, orderToSave.Data)
 	}
 }
