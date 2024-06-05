@@ -28,6 +28,12 @@ func main() {
 		if choice == 0 {
 			break
 		}
+		orderUID := faker.UUIDDigit()
+		transaction := faker.UUIDDigit()
+		chrtID := rand.Intn(100000)
+		price := rand.Intn(100000)
+		date := time.Now().Format("2006-01-02T15:04:05Z")
+		fmt.Println("Message:")
 		message := fmt.Sprintf(
 			`{
 		"order_uid": "%s",
@@ -78,11 +84,11 @@ func main() {
 		"date_created": "%s",
 		"oof_shard": 1
 	  }`,
-			faker.UUIDDigit(),
-			faker.UUIDDigit(),
-			rand.Intn(100000),
-			rand.Intn(100000),
-			time.Now().Format("2006-01-02T15:04:05Z"),
+			orderUID,
+			transaction,
+			chrtID,
+			price,
+			date,
 		)
 		fmt.Println(message)
 		err = connection.Publish(channel, []byte(message))
@@ -90,5 +96,6 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println("Message sent successfully.")
+		fmt.Printf("OrderUID:\n%s\n", orderUID)
 	}
 }
